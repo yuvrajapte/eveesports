@@ -1,2 +1,0 @@
-# eveesports
-Website
