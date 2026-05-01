@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVE Esports | Pro Arena</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #00cbff;
+            --primary-glow: rgba(0, 203, 255, 0.5);
+            --secondary: #6e00ff;
+            --bg-dark: #05060a;
+            --card-bg: rgba(15, 17, 26, 0.9);
+            --text-gray: #a0a8c0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background: var(--bg-dark);
+            background-image: radial-gradient(circle at 10% 20%, rgba(0, 203, 255, 0.1) 0%, transparent 40%),
+                              radial-gradient(circle at 90% 80%, rgba(110, 0, 255, 0.1) 0%, transparent 40%);
+            color: #fff; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+
+        .login-card {
+            background: var(--card-bg); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2.5rem; border-radius: 30px; width: 90%; max-width: 420px; text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); animation: fadeIn 0.8s ease-out;
+        }
+
+        /* PFP Styles */
+        .pfp-container {
+            position: relative; width: 90px; height: 90px; margin: 0 auto 1.5rem auto;
+            border-radius: 50%; border: 2px dashed var(--primary);
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            overflow: hidden; transition: 0.3s;
+        }
+        .pfp-container:hover { border-style: solid; box-shadow: 0 0 15px var(--primary-glow); }
+        .pfp-preview { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .pfp-icon { font-size: 1.5rem; color: var(--primary); }
+        #pfp-input { display: none; }
+
+        .form-logo { width: 70px; display: block; margin: 0 auto 1rem auto; filter: drop-shadow(0 0 10px var(--primary-glow)); }
+        
+        h2 { font-family: 'Orbitron', sans-serif; font-size: 1.6rem; letter-spacing: 2px; margin-bottom: 0.5rem;
+             background: linear-gradient(to right, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .subtitle { color: var(--text-gray); font-size: 0.85rem; margin-bottom: 1.5rem; display: block; }
+
+        .field-wrapper { margin-bottom: 1rem; text-align: left; }
+        input { width: 100%; padding: 12px 16px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px; color: #fff; font-size: 0.9rem; transition: 0.3s; }
+        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px rgba(0, 203, 255, 0.2); }
+
+        .primary-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer;
+                       background: linear-gradient(135deg, var(--secondary), var(--primary)); color: white;
+                       font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
+        .primary-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 15px var(--primary-glow); }
+
+        .google-btn { width: 100%; padding: 10px; margin-top: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
+                      background: rgba(255,255,255,0.05); color: white; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
+
+        .toggle-mode { margin-top: 1.2rem; font-size: 0.8rem; color: var(--text-gray); }
+        #switch-mode, #forgot-link { color: var(--primary); cursor: pointer; font-weight: 600; }
+        #forgot-link { display: block; margin-top: 8px; opacity: 0.7; }
+
+        /* Modal & Loader */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-content { background: #11141d; padding: 2rem; border-radius: 20px; border: 1px solid var(--primary); width: 320px; text-align: center; }
+        #loader { position: fixed; inset: 0; background: var(--bg-dark); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 200; }
+        .spinner { width: 50px; height: 50px; border: 3px solid rgba(0,203,255,0.1); border-top: 3px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1a1c23; border: 1px solid var(--primary); padding: 10px 20px; border-radius: 8px; display: none; z-index: 300; }
+    </style>
+</head>
+<body>
+
+<div id="loader"><div class="spinner"></div></div>
+<div id="toast"></div>
+
+<div class="login-card">
+    <img src="https://i.ibb.co/gbnpdhJ3/1719071244310.png" id="main-logo" class="form-logo">
+    
+    <div id="pfp-section" style="display: none;">
+        <label for="pfp-input" class="pfp-container" id="pfp-label">
+            <span class="pfp-icon" id="plus-icon">+</span>
+            <img id="pfp-preview" class="pfp-preview">
+        </label>
+        <input type="file" id="pfp-input" accept="image/*">
+    </div>
+
+    <h2 id="title">EVE ESPORTS</h2>
+    <p class="subtitle" id="subtitle">Enter the arena to dominate</p>
+
+    <div id="form-fields">
+        <div class="field-wrapper" id="signup-extra" style="display: none;">
+            <input type="text" id="fullname" placeholder="Full Name" style="margin-bottom: 1rem;">
+            <input type="text" id="username" placeholder="Username">
+        </div>
+        <div class="field-wrapper"><input type="email" id="email" placeholder="Email Address"></div>
+        <div class="field-wrapper"><input type="password" id="password" placeholder="Password"></div>
+    </div>
+
+    <button class="primary-btn" id="mainBtn">Login</button>
+    <button class="google-btn" id="googleBtn">
+        <img src="https://i.ibb.co/1Y1KQ9c8/75ad255ebbf47f949a79efa26e28cbbe-1-removebg-preview.png" width="18"> Continue with Google
+    </button>
+
+    <div class="toggle-mode">
+        <span id="toggle-text">New here?</span> <span id="switch-mode">Create Account</span>
+        <span id="forgot-link">Forgot Password?</span>
+    </div>
+</div>
+
+<div id="forgot-modal" class="modal">
+    <div class="modal-content">
+        <h3 style="color:var(--primary); margin-bottom:1rem;">RESET PASSWORD</h3>
+        <input type="email" id="reset-email" placeholder="Registered Email" style="margin-bottom:1rem;">
+        <button class="primary-btn" id="sendReset" style="padding:10px;">Send Link</button>
+        <p onclick="document.getElementById('forgot-modal').style.display='none'" style="margin-top:1rem; cursor:pointer; font-size:0.8rem;">Cancel</p>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDdW7ibzhb2O2y3XESRY1gNtOJDZGXQvbo",
+        authDomain: "eve-esports-login.firebaseapp.com",
+        projectId: "eve-esports-login",
+        storageBucket: "eve-esports-login.firebasestorage.app",
+        messagingSenderId: "886917494008",
+        appId: "1:886917494008:web:5486a96b14f253ed6cf70d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let isLogin = true;
+    let base64Image = "";
+
+    const switchBtn = document.getElementById('switch-mode');
+    const pfpSection = document.getElementById('pfp-section');
+    const mainLogo = document.getElementById('main-logo');
+    const pfpInput = document.getElementById('pfp-input');
+    const pfpPreview = document.getElementById('pfp-preview');
+    const plusIcon = document.getElementById('plus-icon');
+    const loader = document.getElementById('loader');
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg; t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 3000);
+    }
+
+    pfpInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                base64Image = event.target.result;
+                pfpPreview.src = base64Image;
+                pfpPreview.style.display = 'block';
+                plusIcon.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    switchBtn.onclick = () => {
+        isLogin = !isLogin;
+        document.getElementById('signup-extra').style.display = isLogin ? 'none' : 'block';
+        pfpSection.style.display = isLogin ? 'none' : 'block';
+        mainLogo.style.display = isLogin ? 'block' : 'none';
+        document.getElementById('title').innerText = isLogin ? 'EVE ACCESS' : 'JOIN ARENA';
+        document.getElementById('mainBtn').innerText = isLogin ? 'Login' : 'Sign Up';
+        switchBtn.innerText = isLogin ? 'Create Account' : 'Login Instead';
+        document.getElementById('forgot-link').style.display = isLogin ? 'block' : 'none';
+    };
+
+    document.getElementById('forgot-link').onclick = () => document.getElementById('forgot-modal').style.display = 'flex';
+
+    document.getElementById('sendReset').onclick = async () => {
+        const email = document.getElementById('reset-email').value;
+        try {
+            await sendPasswordResetEmail(auth, email);
+            showToast("Reset link sent!");
+            document.getElementById('forgot-modal').style.display = 'none';
+        } catch(e) { showToast("Error sending link"); }
+    };
+
+    document.getElementById('mainBtn').onclick = async () => {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        if(!email || !password) return showToast("Enter credentials!");
+
+        loader.style.display = 'flex';
+        try {
+            if(isLogin) {
+                await signInWithEmailAndPassword(auth, email, password);
+            } else {
+                const name = document.getElementById('fullname').value;
+                const username = document.getElementById('username').value;
+                const userCred = await createUserWithEmailAndPassword(auth, email, password);
+                
+                await setDoc(doc(db, "users", userCred.user.uid), {
+                    name: name,
+                    username: username,
+                    email: email,
+                    pfp: base64Image || "https://i.ibb.co/6NG877M/default-avatar.png",
+                    createdAt: new Date()
+                });
+            }
+            window.location.href = "home.html";
+        } catch(e) {
+            loader.style.display = 'none';
+            showToast(e.code.replace('auth/', ''));
+        }
+    };
+
+    // --- Updated Google Sign-in with PFP Logic ---
+    document.getElementById('googleBtn').onclick = async () => {
+        loader.style.display = 'flex';
+        try {
+            const provider = new GoogleAuthProvider();
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+
+            // Check if user already exists in Firestore
+            const docRef = doc(db, "users", user.uid);
+            const docSnap = await getDoc(docRef);
+
+            if (!docSnap.exists()) {
+                // If new user via Google, save their Google Profile Info
+                await setDoc(docRef, {
+                    name: user.displayName,
+                    username: user.email.split('@')[0], // Create a default username
+                    email: user.email,
+                    pfp: user.photoURL || "https://i.ibb.co/6NG877M/default-avatar.png",
+                    createdAt: new Date()
+                });
+            }
+            window.location.href = "home.html";
+        } catch(e) { 
+            loader.style.display = 'none';
+            showToast("Google Login Failed"); 
+            console.error(e);
+        }
+    };
+</script>
+</body>
+</html>
